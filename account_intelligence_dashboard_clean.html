@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Intelligence Dashboard</title>
+  <style>
+
+    :root{
+      --bg:#07101f;
+      --bg2:#0b1428;
+      --panel:rgba(14,24,48,.88);
+      --panel2:rgba(18,30,58,.92);
+      --panel3:rgba(24,37,70,.92);
+      --line:rgba(255,255,255,.10);
+      --line-strong:rgba(255,255,255,.16);
+      --text:#f4f7ff;
+      --muted:#a8b4cf;
+      --accent:#8b5cf6;
+      --accent2:#22c55e;
+      --accent3:#38bdf8;
+      --warn:#f59e0b;
+      --danger:#fb7185;
+      --chip:rgba(139,92,246,.12);
+      --chip-strong:rgba(139,92,246,.22);
+      --shadow:0 24px 80px rgba(0,0,0,.36);
+      --shadow-soft:0 12px 30px rgba(0,0,0,.20);
+      --radius:22px;
+      --radius-sm:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      background:
+        radial-gradient(1200px 600px at 15% 0%, rgba(139,92,246,.18), transparent 50%),
+        radial-gradient(900px 500px at 85% 10%, rgba(56,189,248,.12), transparent 45%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      letter-spacing:.01em;
+    }
+    a{color:inherit;text-decoration:none}
+    button,input,select,textarea{
+      font:inherit;
+    }
+    button{
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    ::selection{
+      background:rgba(139,92,246,.35);
+      color:#fff;
+    }
+
+    .app{
+      min-height:100%;
+      padding:18px;
+    }
+    .layout{
+      max-width:1600px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 320px minmax(0,1fr);
+      gap:18px;
+      align-items:start;
+    }
+
+    .sidebar,
+    .panel,
+    .acct-card,
+    .meta-card,
+    .signal-box,
+    .strategy-box,
+    .news-card,
+    .mention-card,
+    .exec,
+    .drawer-card{
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-soft);
+      border:1px solid var(--line);
+    }
+
+    .sidebar{
+      position:sticky;
+      top:18px;
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(16,26,51,.95), rgba(10,16,32,.88));
+      padding:18px;
+      overflow:hidden;
+    }
+
+    .sidebar-head{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .brand-mark{
+      width:40px;height:40px;border-radius:14px;
+      display:grid;place-items:center;
+      font-weight:800;
+      background:linear-gradient(135deg, var(--accent), var(--accent3));
+      color:#fff;
+      box-shadow:0 14px 30px rgba(139,92,246,.25);
+      flex:0 0 auto;
+    }
+    .brand .kicker{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+    .brand .sub{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .search{
+      width:100%;
+      padding:12px 13px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      outline:none;
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.02);
+    }
+    .search:focus{
+      border-color:rgba(139,92,246,.58);
+      box-shadow:0 0 0 3px rgba(139,92,246,.12);
+    }
+
+    .acct-list{
+      margin-top:14px;
+      max-height:calc(100vh - 220px);
+      overflow:auto;
+      padding-right:4px;
+    }
+    .acct-list::-webkit-scrollbar,
+    .drawer-content::-webkit-scrollbar,
+    .results-table-wrap::-webkit-scrollbar{
+      width:10px;
+      height:10px;
+    }
+    .acct-list::-webkit-scrollbar-thumb,
+    .drawer-content::-webkit-scrollbar-thumb,
+    .results-table-wrap::-webkit-scrollbar-thumb{
+      background:rgba(255,255,255,.14);
+      border-radius:999px;
+      border:2px solid transparent;
+      background-clip:content-box;
+    }
+    .acct-card{
+      border-radius:18px;
+      padding:14px;
+      margin-bottom:10px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      cursor:pointer;
+      transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+      color:var(--text) !important;
+    }
+    .acct-card:hover{
+      transform:translateY(-1px);
+      border-color:rgba(139,92,246,.34);
+      box-shadow:0 18px 40px rgba(0,0,0,.22);
+    }
+    .acct-card.active{
+      background:linear-gradient(180deg, rgba(139,92,246,.18), rgba(56,189,248,.08));
+      border-color:rgba(139,92,246,.45);
+      box-shadow:0 18px 40px rgba(0,0,0,.22);
+    }
+    .acct-card .name{
+      font-weight:700;
+      font-size:14px;
+      line-height:1.35;
+      margin-bottom:5px;
+      color:var(--text) !important;
+    }
+    .acct-card .sub{
+      color:var(--muted) !important;
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .main{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-width:0;
+    }
+
+    .topbar{
+      position:sticky;
+      top:18px;
+      z-index:5;
+    }
+    .topbar-inner{
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(16,26,51,.92), rgba(13,20,39,.88));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      padding:18px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .panel{
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, var(--panel), rgba(10,16,32,.82));
+      padding:18px;
+      min-width:0;
+    }
+    .panel.hero{
+      padding:22px;
+    }
+    .hero{
+      display:grid;
+      grid-template-columns:minmax(0,1.3fr) minmax(320px,.9fr);
+      gap:18px;
+      align-items:start;
+    }
+    .hero-left{min-width:0}
+    .hero-right{min-width:0}
+
+    .brandTag,
+    .pill,
+    .score,
+    .badge,
+    .mini,
+    .chip,
+    .tag,
+    .recipe-chip,
+    .match-chip,
+    .action,
+    .btn,
+    .tabbtn{
+      transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease, color .18s ease, opacity .18s ease;
+    }
+
+    .brandTag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(139,92,246,.12);
+      color:#d9ccff;
+      border:1px solid rgba(139,92,246,.18);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      margin-bottom:14px;
+    }
+    .hero-title{
+      font-size:28px;
+      line-height:1.1;
+      letter-spacing:-.03em;
+      font-weight:800;
+      margin:0 0 8px 0;
+      color:#fff;
+    }
+    .selected-brand{
+      color:var(--muted);
+      margin-bottom:16px;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .summaryGrid,
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:12px;
+    }
+    .meta-card{
+      border-radius:18px;
+      padding:14px 15px;
+      background:rgba(255,255,255,.04);
+      color:var(--text) !important;
+    }
+    .label{
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-size:11px;
+      color:#aab6d8;
+      margin-bottom:8px;
+    }
+    .value{
+      font-size:15px;
+      line-height:1.45;
+      font-weight:700;
+      color:#fff;
+    }
+
+    .hero-right{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .signal-box{
+      border-radius:20px;
+      background:rgba(255,255,255,.035);
+      padding:15px;
+      color:var(--text) !important;
+    }
+    .signal-box .head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .signal-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .signal{
+      padding:10px 11px;
+      border-radius:14px;
+      background:rgba(255,255,255,.03);
+      border:1px solid transparent;
+      color:var(--text);
+      line-height:1.4;
+    }
+    .score{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 11px;
+      border-radius:999px;
+      background:rgba(34,197,94,.12);
+      border:1px solid rgba(34,197,94,.22);
+      color:#d9ffe7;
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    #intelNarrative,#salesAngle{
+      color:var(--text) !important;
+      line-height:1.6;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .tabbtn{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.035);
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:650;
+      letter-spacing:.01em;
+    }
+    .tabbtn:hover{
+      transform:translateY(-1px);
+      border-color:rgba(139,92,246,.35);
+      background:rgba(139,92,246,.10);
+    }
+    .tabbtn.active{
+      background:linear-gradient(135deg, rgba(139,92,246,.24), rgba(56,189,248,.14));
+      border-color:rgba(139,92,246,.42);
+      box-shadow:0 12px 30px rgba(139,92,246,.15);
+    }
+
+    .section-title{
+      font-size:22px;
+      line-height:1.2;
+      letter-spacing:-.02em;
+      font-weight:800;
+      margin-bottom:6px;
+      color:#fff;
+    }
+    .section-sub,
+    .small-note,
+    .query-note,
+    .meta,
+    .desc,
+    .why,
+    .sub{
+      color:var(--muted) !important;
+      line-height:1.55;
+    }
+    .section-sub{font-size:14px}
+    .small-note{font-size:13px}
+    .query-note{
+      margin-top:8px;
+      padding:12px 13px;
+      border-radius:14px;
+      background:rgba(255,255,255,.035);
+      border:1px solid var(--line);
+      color:#d7def2 !important;
+    }
+
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .left,.right{min-width:0}
+    .tagrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .tag,
+    .mini,
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:7px 10px;
+      font-size:12px;
+      line-height:1;
+    }
+    .tag{
+      cursor:pointer;
+    }
+    .tag:hover{
+      transform:translateY(-1px);
+      border-color:rgba(245,158,11,.55);
+      background:rgba(245,158,11,.10);
+    }
+    .pill:hover{
+      transform:translateY(-1px);
+      border-color:rgba(139,92,246,.36);
+    }
+    .mini{
+      font-size:11px;
+      color:#dbe4ff;
+      background:rgba(139,92,246,.08);
+      border-color:rgba(139,92,246,.16);
+    }
+
+    .news-grid,
+    .mentions-grid,
+    .exec-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:14px;
+    }
+    .news-card,
+    .mention-card,
+    .exec{
+      border-radius:20px;
+      padding:16px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+      color:var(--text) !important;
+    }
+    .exec .top,
+    .news-card .top,
+    .mention-card .top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:10px;
+    }
+    .title,
+    .name{
+      color:#fff !important;
+      font-weight:800;
+      line-height:1.35;
+    }
+    .title{font-size:15px}
+    .name{font-size:16px}
+    .date{
+      font-size:12px;
+      color:var(--muted);
+      flex:0 0 auto;
+      white-space:nowrap;
+    }
+    .desc,
+    .why{
+      margin-top:6px;
+      font-size:13px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding:7px 10px;
+      background:rgba(56,189,248,.12);
+      border:1px solid rgba(56,189,248,.18);
+      color:#d6f3ff;
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .mini-row,
+    .actions,
+    .row,
+    .cta-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+      margin-top:12px;
+    }
+    .actions{justify-content:flex-start}
+
+    .btn,
+    .action{
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:11px 13px;
+      cursor:pointer;
+      font-weight:700;
+      line-height:1;
+      text-align:center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    .btn:hover,
+    .action:hover{
+      transform:translateY(-1px);
+      border-color:rgba(139,92,246,.32);
+      background:rgba(139,92,246,.08);
+    }
+    .btn.primary,
+    .action.primary{
+      background:linear-gradient(135deg, rgba(139,92,246,.95), rgba(56,189,248,.82));
+      color:#fff;
+      border-color:transparent;
+      box-shadow:0 14px 30px rgba(139,92,246,.22);
+    }
+    .btn.primary:hover,
+    .action.primary:hover{
+      transform:translateY(-1px);
+      filter:saturate(1.06);
+    }
+    .btn.ghost{
+      background:rgba(255,255,255,.03);
+    }
+
+    .podcast-controls{
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr;
+      gap:10px;
+    }
+    .podcast-controls input,
+    .podcast-controls select{
+      width:100%;
+      padding:12px 13px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    .podcast-controls input::placeholder,
+    .search::placeholder{
+      color:#7f8bad;
+    }
+    .podcast-controls input:focus{
+      border-color:rgba(139,92,246,.58);
+      box-shadow:0 0 0 3px rgba(139,92,246,.1);
+    }
+
+    .advanced{
+      margin-top:12px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      overflow:hidden;
+    }
+    .advanced summary{
+      cursor:pointer;
+      list-style:none;
+      padding:14px 16px;
+      color:#fff;
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .advanced summary::-webkit-details-marker{display:none}
+    .advanced-body{
+      padding:0 16px 16px;
+    }
+
+    .toggle-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:12px;
+    }
+    .toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 11px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      color:var(--text);
+      font-size:12px;
+    }
+    .toggle input{accent-color:var(--accent)}
+    .strategy-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+    .strategy-box{
+      border-radius:18px;
+      padding:15px;
+      background:rgba(255,255,255,.04);
+      color:var(--text) !important;
+    }
+    .strategy-box .meta{
+      margin-top:10px;
+      font-size:13px;
+    }
+    .strategy-chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .match-chip,
+    .recipe-chip{
+      border-radius:999px;
+      border:1px solid rgba(245,158,11,.28);
+      background:linear-gradient(180deg, rgba(245,158,11,.96), rgba(251,191,36,.92));
+      color:#1a1200;
+      padding:9px 12px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .match-chip:hover,
+    .recipe-chip:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 26px rgba(245,158,11,.12);
+    }
+    .recipe-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .results{
+      margin-top:14px;
+      border-radius:20px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      padding:16px;
+      color:var(--text) !important;
+    }
+    .results-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .empty{
+      margin-top:14px;
+      padding:14px 15px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px dashed rgba(255,255,255,.12);
+      color:var(--muted);
+      line-height:1.55;
+    }
+
+    .panel.content{
+      min-height:220px;
+    }
+
+    .meta-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .drawer-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.44);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .2s ease;
+      z-index:30;
+    }
+    .drawer-backdrop.open{
+      opacity:1;
+      pointer-events:auto;
+    }
+    .drawer{
+      position:fixed;
+      top:18px;
+      right:18px;
+      width:min(900px, calc(100vw - 36px));
+      height:calc(100vh - 36px);
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(13,21,41,.98), rgba(8,13,25,.96));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      transform:translateX(106%);
+      transition:transform .24s ease;
+      z-index:40;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      color:var(--text) !important;
+    }
+    .drawer.open{transform:translateX(0)}
+    .drawer-header{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      background:rgba(255,255,255,.02);
+    }
+    .drawer-header h3{
+      margin:0;
+      color:#fff;
+      font-size:18px;
+    }
+    .drawer-content{
+      padding:18px;
+      overflow:auto;
+    }
+    .drawer-card{
+      border-radius:20px;
+      padding:16px;
+      margin-bottom:14px;
+      background:rgba(255,255,255,.04);
+      color:var(--text) !important;
+    }
+
+    .results-table-wrap{
+      overflow:auto;
+      border-radius:16px;
+      border:1px solid var(--line);
+      margin-top:12px;
+      background:rgba(255,255,255,.02);
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:760px;
+      color:var(--text);
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:1;
+      background:rgba(17,27,51,.98);
+      color:#eaf0ff;
+      text-align:left;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.10em;
+      padding:12px 13px;
+      border-bottom:1px solid var(--line);
+    }
+    tbody td{
+      padding:12px 13px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      vertical-align:top;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.5;
+    }
+    tbody tr:hover{
+      background:rgba(255,255,255,.03);
+    }
+
+    .drawer-close{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      width:38px;height:38px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:22px;
+      line-height:1;
+    }
+
+    .big{
+      color:#fff;
+      font-weight:800;
+    }
+
+    @media (max-width: 1320px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{position:relative;top:0}
+      .hero{grid-template-columns:1fr}
+      .summaryGrid,.meta-grid,.strategy-grid,.news-grid,.mentions-grid,.exec-grid{grid-template-columns:repeat(2, minmax(0,1fr))}
+      .drawer{width:min(820px, calc(100vw - 24px)); right:12px; top:12px; height:calc(100vh - 24px);}
+    }
+    @media (max-width: 860px){
+      .app{padding:12px}
+      .topbar-inner{flex-direction:column; align-items:stretch}
+      .top-actions{justify-content:flex-start}
+      .summaryGrid,.meta-grid,.strategy-grid,.news-grid,.mentions-grid,.exec-grid{grid-template-columns:1fr}
+      .podcast-controls{grid-template-columns:1fr}
+      .results-head,.toolbar,.exec .top,.news-card .top,.mention-card .top{flex-direction:column; align-items:flex-start}
+      .drawer{
+        width:calc(100vw - 18px);
+        top:9px;
+        right:9px;
+        height:calc(100vh - 18px);
+      }
+      .drawer-header,
+      .drawer-content{padding-left:14px;padding-right:14px}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <div>
+            <h1>Account Intelligence Dashboard</h1>
+            <p>Sales-prospecting cockpit for executives, news, public mentions, and deep web / podcast search with clickable intelligence trails.</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button class="btn primary" id="copyShareBtn">Copy share link</button>
+          <button class="btn ghost" id="copyBriefBtn">Copy prospecting brief</button>
+          <button class="btn ghost" id="exportJsonBtn">Export snapshot JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <div>
+            <div class="label">Accounts</div>
+            <div style="font-weight:800;margin-top:4px">Pick a company</div>
+          </div>
+          <div class="label" id="acctCount"></div>
+        </div>
+        <input id="accountFilter" class="search" type="text" placeholder="Filter by company, territory, industry..." />
+        <div id="accountList" class="acct-list"></div>
+      </aside>
+
+      <main class="main">
+        <section class="panel hero">
+          <div class="hero-left">
+            <div class="hero-title">
+              <div class="kicker" id="brandTag">Selected account</div>
+              <div class="company-name" id="selectedName"></div>
+              <div class="small-note" id="selectedBrand"></div>
+            </div>
+            <div class="meta-grid" id="summaryGrid"></div>
+            <div class="cta-row" id="actionLinks"></div>
+          </div>
+
+          <div class="hero-right">
+            <div class="right-stack">
+              <div class="signal-box">
+                <div class="head">
+                  <div class="label">Account intelligence</div>
+                  <span class="score" id="intelScore">Score 0</span>
+                </div>
+                <div class="small-note" id="intelNarrative"></div>
+              </div>
+              <div class="signal-box">
+                <div class="head"><div class="label">What to search next</div></div>
+                <div class="signal-list" id="signalList"></div>
+              </div>
+              <div class="signal-box">
+                <div class="head"><div class="label">Sales angle</div></div>
+                <div class="small-note" id="salesAngle"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="tabs" id="tabs"></div>
+        </section>
+
+        <section class="panel content" id="tabContent"></section>
+      </main>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div>
+        <h3 id="drawerTitle">Search results</h3>
+        <div class="small-note" id="drawerSubtitle"></div>
+      </div>
+      <button class="drawer-close" id="drawerClose" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-content" id="drawerContent"></div>
+  </aside>
+
+<script>
+const accounts = [{"account": "Alarm.com Incorporated", "website_text": "alarm.com", "website_url": "http://www.alarm.com/", "linkedin_text": "Alarm.com LinkedIn", "linkedin_url": "https://www.linkedin.com/company/alarm-com/", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "MC LEAN", "state": "VA", "country": "US", "industry": "Professional Services / Business Services", "finance_name": "Advanced Sprinkler & Technology, LLC", "execs": [{"name": "Stephen Trundle", "title": "President and Chief Executive Officer", "source": "Alarm.com investor governance page", "url": "https://investors.alarm.com/governance/board-of-directors/person-details/default.aspx?ItemId=cc322463-851f-43b9-b006-8da6584f6a13"}, {"name": "Steve Valenzuela", "title": "Chief Financial Officer", "source": "Alarm.com press release", "url": "https://alarm.com/press/alarm-com-names-steve-valenzuela-as-new-chief-financial-officer"}, {"name": "Daniel Kerzner", "title": "President, Platforms Business", "source": "Alarm.com investor governance page", "url": "https://investors.alarm.com/governance/board-of-directors/person-details/default.aspx?ItemId=1f289ac1-37e3-4a31-88e0-cec4d68b639b"}], "news": [{"date": "2026-03-31", "title": "Alarm.com expands video security portfolio with new AI capabilities and flexible camera solutions", "source": "Alarm.com", "url": "https://investors.alarm.com/news-releases/press-release-details/2026/Alarm-com-Expands-Video-Security-Portfolio-with-New-AI-Capabilities-and-Flexible-Camera-Solutions/default.aspx", "summary": "Adds AI Video Event Search and new camera hardware to its video suite."}, {"date": "2026-03-18", "title": "Alarm.com showcases unified platform growth and AI-powered innovation at ISC West 2026", "source": "Alarm.com", "url": "https://alarm.com/press/alarm-com-showcases-unified-platform-growth-and-ai-powered-innovation-at-isc-west-2026", "summary": "Highlights platform growth, privacy-first AI, and next-generation video capabilities."}], "mentions": [{"date": "2026-04-15", "title": "Alarm.com adds features to Universal Communicator device", "source": "Investing.com / Reuters feed", "url": "https://www.investing.com/news/company-news/alarmcom-adds-features-to-universal-communicator-device-93CH-4614703", "summary": "Coverage of Alarm.com’s latest product enhancements and platform expansion."}, {"date": "2026-02-19", "title": "Alarm.com updates FY 2026 earnings guidance after strong Q4", "source": "MarketBeat", "url": "https://www.marketbeat.com/instant-alerts/alarmcom-nasdaqalrm-updates-fy-2026-earnings-guidance-2026-02-19/", "summary": "Highlights the company’s stronger-than-expected guidance and earnings results."}], "google_execs": "https://www.google.com/search?q=Alarm.com+Incorporated+leadership+executives+site%3Awww.alarm.com", "google_news": "https://www.google.com/search?q=Alarm.com+Incorporated+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=Alarm.com+Incorporated+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=Alarm.com+Incorporated", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+Alarm.com+Incorporated"}, {"account": "Booking Holdings Inc.", "website_text": "bookingholdings.com", "website_url": "http://bookingholdings.com/", "linkedin_text": "Booking Holdings LinkedIn", "linkedin_url": "https://www.linkedin.com/company/bookingholdings/", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "Norwalk", "state": "CT", "country": "US", "industry": "Professional Services / Business Services", "finance_name": "Priceline.com LLC.", "execs": [{"name": "Glenn D. Fogel", "title": "Chief Executive Officer and Director", "source": "Booking Holdings leadership page", "url": "https://www.bookingholdings.com/about/leadership/"}, {"name": "Ewout Steenbergen", "title": "Chief Financial Officer", "source": "Booking Holdings leadership page", "url": "https://www.bookingholdings.com/about/leadership/"}, {"name": "Peter J. Millones, Jr.", "title": "Executive Vice President and General Counsel", "source": "Booking Holdings leadership page", "url": "https://www.bookingholdings.com/about/leadership/"}], "news": [{"date": "2026-04-28", "title": "Booking Holdings to webcast first quarter 2026 financial results", "source": "Booking Holdings IR", "url": "https://ir.bookingholdings.com/news/news-details/2026/Booking-Holdings-to-Webcast-First-Quarter-2026-Financial-Results-on-April-28/default.aspx", "summary": "The company scheduled its Q1 2026 earnings webcast for April 28."}, {"date": "2026-04-02", "title": "Booking Holdings completes 25-for-1 stock split and increases authorized shares", "source": "Investing.com / SEC filing coverage", "url": "https://www.investing.com/news/sec-filings/booking-holdings-completes-25for1-stock-split-and-increases-authorized-shares-93CH-4596679", "summary": "Coverage of the completed forward split and share authorization change."}], "mentions": [{"date": "2026-04-13", "title": "Booking.com warns customers of hack that exposed booking information", "source": "The Guardian", "url": "https://www.theguardian.com/technology/2026/apr/13/booking-com-customers-hack-exposed-data", "summary": "External coverage of a Booking.com data-breach incident."}, {"date": "2026-04-02", "title": "Booking Holdings completes 25-for-1 stock split and increases authorized shares", "source": "Investing.com", "url": "https://www.investing.com/news/sec-filings/booking-holdings-completes-25for1-stock-split-and-increases-authorized-shares-93CH-4596679", "summary": "Market coverage of the split and share-capital update."}], "google_execs": "https://www.google.com/search?q=Booking+Holdings+Inc.+leadership+executives+site%3Abookingholdings.com", "google_news": "https://www.google.com/search?q=Booking+Holdings+Inc.+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=Booking+Holdings+Inc.+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=Booking+Holdings+Inc.", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+Booking+Holdings+Inc."}, {"account": "Booking.com", "website_text": "bookingholdings.com", "website_url": "http://bookingholdings.com/", "linkedin_text": "Booking.com LinkedIn", "linkedin_url": "https://www.linkedin.com/company/booking.com/", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "NEW YORK", "state": "NY", "country": "US", "industry": "Professional Services / Business Services", "finance_name": "Booking.com", "brand_of": "Booking Holdings Inc.", "execs": [{"name": "Glenn D. Fogel", "title": "Chief Executive Officer", "source": "Booking Holdings leadership page", "url": "https://www.bookingholdings.com/about/leadership/"}, {"name": "Rob Francis", "title": "Chief Technology Officer, Booking.com", "source": "Booking Holdings press release", "url": "https://www.bookingholdings.com/press-releases/booking-com-launches-new-ai-trip-planner-to-enhance-travel-planning-experience/"}], "news": [{"date": "2019-06-26", "title": "Booking Holdings announces leadership transition at Booking.com", "source": "Booking Holdings IR", "url": "https://ir.bookingholdings.com/news/news-details/2019/Booking-Holdings-Announces-Leadership-Transition-At-Booking.com-06-26-2019/default.aspx", "summary": "Glenn Fogel assumed the CEO role at Booking.com in addition to Booking Holdings."}, {"date": "2023-09-01", "title": "Booking.com launches new AI Trip Planner", "source": "Booking Holdings", "url": "https://www.bookingholdings.com/press-releases/booking-com-launches-new-ai-trip-planner-to-enhance-travel-planning-experience/", "summary": "Booking.com introduced an AI trip-planning experience to improve travel search."}], "mentions": [{"date": "2026-04-13", "title": "Booking.com hack exposes some booking information", "source": "The Guardian", "url": "https://www.theguardian.com/technology/2026/apr/13/booking-com-customers-hack-exposed-data", "summary": "External coverage of customer booking data exposure and phishing risk."}, {"date": "2026-04-15", "title": "Booking.com hackers use hotel messaging to send fake requests", "source": "New York Post", "url": "https://nypost.com/2026/04/15/lifestyle/booking-com-hackers-employ-hotel-messaging-in-phishing-scam/", "summary": "Coverage of phishing messages tied to the Booking.com incident."}], "google_execs": "https://www.google.com/search?q=Booking.com+leadership+executives+site%3Abookingholdings.com", "google_news": "https://www.google.com/search?q=Booking.com+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=Booking.com+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=Booking.com", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+Booking.com"}, {"account": "PRICELINE", "website_text": "priceline.com", "website_url": "http://www.priceline.com/", "linkedin_text": "Priceline LinkedIn", "linkedin_url": "https://www.linkedin.com/company/priceline-com/posts/?feedView=all", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "ATLANTA", "state": "GA", "country": "US", "industry": "High Technology / Software and Cloud Services", "finance_name": "PRICELINE", "execs": [{"name": "Brigit Zimmerman", "title": "Chief Executive Officer", "source": "Priceline press center", "url": "https://press.priceline.com/executive-team/"}, {"name": "Brett Keller", "title": "Special Advisor to the CEO", "source": "Booking Holdings press release", "url": "https://www.bookingholdings.com/press-releases/brigit-zimmerman-named-chief-executive-officer-of-priceline/"}, {"name": "Glenn D. Fogel", "title": "Chief Executive Officer, Booking Holdings", "source": "Booking Holdings press release", "url": "https://www.bookingholdings.com/press-releases/brigit-zimmerman-named-chief-executive-officer-of-priceline/"}], "news": [{"date": "2025-11-12", "title": "Brigit Zimmerman named Chief Executive Officer of Priceline", "source": "Booking Holdings / Priceline", "url": "https://press.priceline.com/brigit-zimmerman-named-ceo/", "summary": "Priceline’s chief commercial officer was named CEO effective January 1, 2026."}, {"date": "2025-10-16", "title": "Priceline unveils its 2026 \"Where to Next?\" travel trends report", "source": "Priceline", "url": "https://press.priceline.com/2026traveltrends/", "summary": "A data-driven trends report based on Priceline search and booking behavior."}], "mentions": [{"date": "2025-10-17", "title": "TravelPulse covers Priceline's 2026 travel trends report", "source": "TravelPulse", "url": "https://www.travelpulse.com/news/features/priceline-reveals-top-2026-travel-trends", "summary": "External coverage of Priceline’s travel-trends report and its implications."}, {"date": "2026-04-02", "title": "Booking Holdings 25-for-1 stock split coverage", "source": "Norwalk Today", "url": "https://nationaltoday.com/us/ct/norwalk-ct/news/2026/04/02/booking-holdings-announces-25-for-1-stock-split/", "summary": "Local coverage of the parent company’s split that affects Priceline as a brand."}], "google_execs": "https://www.google.com/search?q=PRICELINE+leadership+executives+site%3Awww.priceline.com", "google_news": "https://www.google.com/search?q=PRICELINE+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=PRICELINE+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=PRICELINE", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+PRICELINE"}, {"account": "Gupshup", "website_text": "gupshup.io", "website_url": "http://gupshup.io/", "linkedin_text": "Gupshup LinkedIn", "linkedin_url": "https://www.linkedin.com/company/gupshup/", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "Fremont", "state": "CA", "country": "US", "industry": "Professional Services / Business Services", "finance_name": "Gupshup", "execs": [{"name": "Beerud Sheth", "title": "Co-Founder and Chief Executive Officer", "source": "Gupshup leadership page", "url": "https://www.gupshup.io/leadership"}, {"name": "Amit Shrivastav", "title": "Chief Financial Officer", "source": "Gupshup leadership page", "url": "https://www.gupshup.io/leadership"}, {"name": "Salim Ali", "title": "Chief Marketing Officer", "source": "Gupshup leadership page", "url": "https://www.gupshup.io/leadership"}], "news": [{"date": "2026-03-12", "title": "Gupshup appoints former Awfis executive Ravi Dugar as CFO", "source": "Economic Times", "url": "https://m.economictimes.com/ai/ai-insights/gupshup-appoints-former-awfis-executive-ravi-dugar-as-cfo/articleshow/129495076.cms", "summary": "The company added a new CFO as it scales its conversational AI platform."}, {"date": "2025-07-23", "title": "Gupshup raises over $60 million for global expansion and growth", "source": "Gupshup", "url": "https://www.gupshup.io/resources/press-releases/gupshup-raises-usd60mn-funding", "summary": "Funding will support global expansion and AI agent adoption."}], "mentions": [{"date": "2026-04-08", "title": "Fidelity reportedly marks down Gupshup valuation sharply", "source": "Economic Times", "url": "https://m.economictimes.com/tech/startups/fidelity-marks-down-conversational-ai-platform-gupshups-valuation-by-80-to-278-million/articleshow/129997269.cms", "summary": "External coverage of a major valuation markdown by an investor."}, {"date": "2025-07-22", "title": "TechCrunch covers Gupshup's $60M funding round", "source": "TechCrunch", "url": "https://techcrunch.com/2025/07/22/gupshup-raises-60m-in-equity-and-debt-leaves-unicorn-status-hanging/", "summary": "Coverage of the company’s equity and debt financing round."}], "google_execs": "https://www.google.com/search?q=Gupshup+leadership+executives+site%3Agupshup.io", "google_news": "https://www.google.com/search?q=Gupshup+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=Gupshup+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=Gupshup", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+Gupshup"}, {"account": "Innovaccer Inc", "website_text": "innovaccer.com", "website_url": "https://www.innovaccer.com/", "linkedin_text": "Innovaccer LinkedIn", "linkedin_url": "https://www.linkedin.com/company/innovaccer/posts/?feedView=all", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "SAN FRANCISCO", "state": "CA", "country": "US", "industry": "High Technology / Software and Cloud Services", "finance_name": "Innovaccer Inc", "execs": [{"name": "Abhinav Shashank", "title": "Cofounder and Chief Executive Officer", "source": "Innovaccer leadership page", "url": "https://innovaccer.com/leadership"}, {"name": "Sandeep Gupta", "title": "Cofounder and Chief Operations Officer", "source": "Innovaccer leadership page", "url": "https://innovaccer.com/leadership"}, {"name": "Scott Bruckner", "title": "Chief Financial Officer", "source": "Innovaccer leadership page", "url": "https://innovaccer.com/leadership"}], "news": [{"date": "2026-03-26", "title": "Innovaccer and Longevity Health expand partnership after achieving $1M cost savings", "source": "Innovaccer", "url": "https://innovaccer.com/resources/news/longevity-health-and-innovaccer-announce-enterprise-ai-center-of-excellence-after-achieving-1m-cost-savings", "summary": "The companies expanded an AI center of excellence after measurable savings and cost reduction."}, {"date": "2026-03-02", "title": "Innovaccer receives Frost & Sullivan innovation recognition for AI-driven patient access", "source": "Frost & Sullivan / PR Newswire", "url": "https://www.prnewswire.com/news-releases/innovaccer-receives-frost--sullivans-2026-united-states-new-product-innovation-recognition-for-excellence-in-ai-driven-patient-access-solutions-302701232.html", "summary": "Recognition for AI-driven patient access and omnichannel workflow unification."}], "mentions": [{"date": "2025-08-01", "title": "Business Insider explains why Innovaccer is delaying IPO plans", "source": "Business Insider", "url": "https://www.businessinsider.com/innovaccer-buying-startups-raising-secondaries-instead-of-ipo-2025-8", "summary": "Coverage of Innovaccer’s private-market strategy, acquisitions, and secondary rounds."}, {"date": "2026-04-02", "title": "Black Book recognizes Innovaccer in 2026 healthcare technology evaluations", "source": "Newswire / Black Book", "url": "https://www.newswire.com/news/black-book-recognizes-innovaccer-as-a-2026-leader-in-ai-powered-22746893", "summary": "External recognition across revenue-cycle autonomy and population health data activation."}], "google_execs": "https://www.google.com/search?q=Innovaccer+Inc+leadership+executives+site%3Awww.innovaccer.com", "google_news": "https://www.google.com/search?q=Innovaccer+Inc+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=Innovaccer+Inc+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=Innovaccer+Inc", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+Innovaccer+Inc"}, {"account": "Robinhood Markets, Inc.", "website_text": "robinhood.com", "website_url": "https://www.robinhood.com/", "linkedin_text": "Robinhood LinkedIn", "linkedin_url": "https://www.linkedin.com/company/robinhood/", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "PALO ALTO", "state": "CA", "country": "US", "industry": "Financial Services / Investment Banking", "finance_name": "Robinhood Markets, Inc.", "execs": [{"name": "Vlad Tenev", "title": "Chairman and Chief Executive Officer", "source": "Robinhood leadership page", "url": "https://investors.robinhood.com/governance/leadership/"}, {"name": "Shiv Verma", "title": "Chief Financial Officer", "source": "Robinhood Q4 2025 results", "url": "https://investors.robinhood.com/news-releases/news-release-details/robinhood-reports-fourth-quarter-and-full-year-2025-results"}, {"name": "Dan Gallagher", "title": "Chief Legal, Compliance and Corporate Affairs Officer", "source": "Robinhood leadership page", "url": "https://investors.robinhood.com/governance/leadership/"}], "news": [{"date": "2026-03-12", "title": "Robinhood reports February 2026 operating data", "source": "Robinhood IR", "url": "https://investors.robinhood.com/news-releases/news-release-details/robinhood-markets-inc-reports-february-2026-operating-data", "summary": "Monthly operating metrics showed higher funded customers, assets, and deposits."}, {"date": "2026-02-10", "title": "Robinhood reports fourth quarter and full year 2025 results", "source": "Robinhood IR", "url": "https://investors.robinhood.com/news-releases/news-release-details/robinhood-reports-fourth-quarter-and-full-year-2025-results", "summary": "Record 2025 revenues, deposits, and Gold subscriber growth."}], "mentions": [{"date": "2026-04-16", "title": "SEC margin-rule change boosts Robinhood-related trading sentiment", "source": "Barron's", "url": "https://www.barrons.com/articles/robinhood-stock-price-sec-decision-margin-trading-1da22190", "summary": "Coverage of a favorable SEC decision and its potential impact on trading activity."}, {"date": "2026-04-16", "title": "Retail trading interest returns to Robinhood shares", "source": "MarketWatch", "url": "https://www.marketwatch.com/livecoverage/s-p-500-dow-jones-nasdaq-iran-war-cease-fire-extension-netflix-tsmc-results/card/surge-in-robinhood-shares-speaks-to-return-of-meme-like-trading-52iAzxG8CyzhoGpO3nXZ", "summary": "Coverage of renewed retail buying and meme-stock style momentum."}], "google_execs": "https://www.google.com/search?q=Robinhood+Markets%2C+Inc.+leadership+executives+site%3Awww.robinhood.com", "google_news": "https://www.google.com/search?q=Robinhood+Markets%2C+Inc.+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=Robinhood+Markets%2C+Inc.+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=Robinhood+Markets%2C+Inc.", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+Robinhood+Markets%2C+Inc."}, {"account": "Workato", "website_text": "workato.com", "website_url": "https://www.workato.com/", "linkedin_text": "Workato LinkedIn", "linkedin_url": "https://www.linkedin.com/company/workato/", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "Mountain View", "state": "CA", "country": "US", "industry": "High Technology / Software and Cloud Services", "finance_name": "Workato", "execs": [{"name": "Vijay Tella", "title": "Co-Founder and Chief Executive Officer", "source": "Workato about page", "url": "https://www.workato.com/about_us"}, {"name": "Thomas Ream", "title": "Chief Financial Officer", "source": "Workato about page", "url": "https://www.workato.com/about_us"}, {"name": "Chandar Pattabhiram", "title": "Chief GTM Officer", "source": "Workato about page", "url": "https://www.workato.com/about_us"}], "news": [{"date": "2026-03-01", "title": "Workato Product Scoop for March 2026 highlights observability and MCP growth", "source": "Workato Product Hub", "url": "https://www.workato.com/product-hub/product-scoop-march-2026/", "summary": "The monthly product round-up highlights new MCP servers and AI-agent connectivity updates."}, {"date": "2026-02-01", "title": "Workato launches first wave of pre-built MCP servers", "source": "Workato Product Hub", "url": "https://www.workato.com/product-hub/now-available-pre-built-mcp-servers/", "summary": "Introduces production-ready MCP servers for enterprise systems."}], "mentions": [{"date": "2025-10-17", "title": "Axios covers Workato's enterprise MCP launch", "source": "Axios", "url": "https://www.axios.com/sponsored/workato-delivers-industrys-first-enterprise-mcp-platform-for-ai-agents", "summary": "Third-party coverage of Workato’s MCP platform for AI agents."}, {"date": "2026-03-02", "title": "Workato reports record momentum in the agentic era", "source": "Palo Alto Today", "url": "https://nationaltoday.com/us/ca/palo-alto/news/2026/03/02/workato-reports-record-momentum-defining-the-future-of-orchestration-for-the-agentic-era/", "summary": "Coverage of Workato’s growth and Enterprise MCP positioning."}], "google_execs": "https://www.google.com/search?q=Workato+leadership+executives+site%3Awww.workato.com", "google_news": "https://www.google.com/search?q=Workato+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=Workato+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=Workato", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+Workato"}, {"account": "nCino", "website_text": "ncino.com", "website_url": "https://www.ncino.com/", "linkedin_text": "nCino LinkedIn", "linkedin_url": "https://www.linkedin.com/company/ncino-inc-/", "territory": "NA_JTSHEEHA_Tech OCI Rep REV_TECH_DA", "city": "WILMINGTON", "state": "NC", "country": "US", "industry": "High Technology / Software and Cloud Services", "finance_name": "nCino", "execs": [{"name": "Sean Desmond", "title": "President and Chief Executive Officer", "source": "nCino leadership page", "url": "https://investor.ncino.com/governance/leadership/"}, {"name": "Greg Orenstein", "title": "Chief Financial Officer", "source": "nCino leadership page", "url": "https://investor.ncino.com/governance/leadership/"}, {"name": "April Rieger", "title": "Chief Legal and Administrative Officer, Corporate Secretary", "source": "nCino leadership page", "url": "https://investor.ncino.com/governance/leadership/"}], "news": [{"date": "2026-03-31", "title": "nCino reports fourth quarter and fiscal year 2026 financial results", "source": "nCino IR", "url": "https://investor.ncino.com/news-releases/news-release-details/ncino-reports-fourth-quarter-and-fiscal-year-2026-financial", "summary": "Exceeds guidance, posts ACV growth, and authorizes an additional $100M share repurchase."}, {"date": "2026-02-16", "title": "nCino announces timing of fourth quarter fiscal 2026 results call", "source": "nCino IR", "url": "https://investor.ncino.com/news-releases/news-release-details/ncino-announces-timing-its-fourth-quarter-fiscal-year-2026/", "summary": "Scheduled the Q4 FY2026 results call for March 31."}], "mentions": [{"date": "2026-04-01", "title": "Barron's highlights nCino’s post-earnings stock surge", "source": "Barron's", "url": "https://www.barrons.com/articles/ncino-earnings-software-stock-price-2dbedaa3", "summary": "External coverage of nCino’s strong quarter and stock reaction."}, {"date": "2026-04-01", "title": "nCino stock jumps after strong Q4 and outlook", "source": "Investopedia", "url": "https://www.investopedia.com/fintech-firm-ncino-stock-tumbles-on-weak-q4-results-outlook-11707438", "summary": "Market commentary on the company’s results and guidance."}], "google_execs": "https://www.google.com/search?q=nCino+leadership+executives+site%3Awww.ncino.com", "google_news": "https://www.google.com/search?q=nCino+latest+news+OR+press+release", "google_mentions": "https://www.google.com/search?q=nCino+public+mentions+OR+news", "google_company": "https://www.google.com/search?q=nCino", "google_linkedin": "https://www.google.com/search?q=site%3Alinkedin.com%2Fcompany+nCino"}];
+
+const state = {
+  selectedIndex: 0,
+  activeTab: 'executives',
+  filter: '',
+  podcastQuery: '',
+  googleKey: '',
+  googleCx: '',
+  youtubeKey: '',
+  sourceFilters: { web: true, youtube: true, spotify: true, hashtags: true, linkedin: true, x: true, reddit: true }
+};
+
+const LS_KEY = 'account_intel_dashboard_v7';
+const tabs = [
+  { id: 'executives', label: 'Executives' },
+  { id: 'news', label: 'Recent news' },
+  { id: 'mentions', label: 'Public mentions' },
+  { id: 'podcasts', label: 'Podcasts + web mentions' }
+];
+
+const el = {};
+['accountList','accountFilter','acctCount','selectedName','selectedBrand','brandTag','summaryGrid','actionLinks','tabs','tabContent','signalList','intelScore','intelNarrative','salesAngle','drawer','drawerBackdrop','drawerTitle','drawerSubtitle','drawerContent','drawerClose','copyShareBtn','copyBriefBtn','exportJsonBtn'].forEach(id => el[id] = document.getElementById(id));
+
+function esc(s){
+  return String(s ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#39;');
+}
+function clean(s){ return String(s ?? '').trim(); }
+function slugify(s){
+  return clean(s).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,'-');
+}
+function normalize(s){
+  return clean(s).toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function formatDate(value){
+  if(!value) return '—';
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+}
+function safeUrl(url){
+  try { return new URL(url).toString(); } catch { return '#'; }
+}
+function googleSearchUrl(query){ return `https://www.google.com/search?q=${encodeURIComponent(query)}`; }
+function youtubeSearchUrl(query){ return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`; }
+function spotifySearchUrl(query){ return `https://open.spotify.com/search/${encodeURIComponent(query)}`; }
+function openExternal(url){ window.open(url, '_blank', 'noopener,noreferrer'); }
+function copyText(text){
+  return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
+}
+function hashState(){
+  const a = selectedAccount();
+  const params = new URLSearchParams();
+  params.set('acct', String(state.selectedIndex));
+  params.set('tab', state.activeTab);
+  if(state.podcastQuery) params.set('q', state.podcastQuery);
+  return `#${params.toString()}`;
+}
+function applyHash(){
+  const hash = location.hash.startsWith('#') ? location.hash.slice(1) : '';
+  if(!hash) return;
+  const params = new URLSearchParams(hash);
+  const acct = parseInt(params.get('acct') || '', 10);
+  const tab = params.get('tab');
+  const q = params.get('q');
+  if(Number.isFinite(acct) && acct >= 0 && acct < accounts.length) state.selectedIndex = acct;
+  if(tab && tabs.some(t => t.id === tab)) state.activeTab = tab;
+  if(q) state.podcastQuery = q;
+}
+function persist(){
+  const payload = {
+    selectedIndex: state.selectedIndex,
+    activeTab: state.activeTab,
+    filter: state.filter,
+    podcastQuery: state.podcastQuery,
+    googleKey: state.googleKey,
+    googleCx: state.googleCx,
+    youtubeKey: state.youtubeKey,
+    sourceFilters: state.sourceFilters
+  };
+  localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  history.replaceState(null, '', hashState());
+}
+function restore(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const saved = JSON.parse(raw);
+      Object.assign(state, saved);
+      state.sourceFilters = Object.assign(state.sourceFilters, saved.sourceFilters || {});
+    }
+  }catch{}
+  applyHash();
+}
+function selectedAccount(){
+  return accounts[state.selectedIndex] || accounts[0];
+}
+
+function roleScore(title){
+  const t = normalize(title);
+  const rules = [
+    [/chief executive officer|ceo|president and chief executive officer/, 100],
+    [/president|gm|general manager|chief operating officer|coo/, 92],
+    [/chief financial officer|cfo|svp finance|finance/, 90],
+    [/chief revenue officer|cro|sales|go to market|gtm/, 88],
+    [/chief marketing officer|cmo|marketing/, 84],
+    [/chief technology officer|cto|chief information officer|cio|engineering|product|platform/, 80],
+    [/chief security officer|security|privacy|risk/, 78],
+    [/vp|vice president|director/, 70]
+  ];
+  for(const [re, score] of rules){
+    if(re.test(t)) return score;
+  }
+  return 62;
+}
+function personaForTitle(title){
+  const t = normalize(title);
+  if(/chief executive officer|ceo|president and chief executive officer/.test(t)) return 'Decision maker';
+  if(/chief financial officer|cfo|finance/.test(t)) return 'Budget owner';
+  if(/chief revenue officer|sales|go to market|gtm|marketing/.test(t)) return 'Demand owner';
+  if(/chief technology officer|cto|chief information officer|cio|engineering|platform|product/.test(t)) return 'Technical buyer';
+  if(/security|privacy|risk/.test(t)) return 'Control owner';
+  if(/president|general manager/.test(t)) return 'Business owner';
+  return 'Influencer';
+}
+function execWhy(exec, account){
+  const text = `${exec.title} ${account.news.map(n=>n.summary).join(' ')} ${account.mentions.map(m=>m.summary).join(' ')}`.toLowerCase();
+  const themes = [];
+  if(/ai|artificial intelligence|machine learning/.test(text)) themes.push('AI / automation');
+  if(/security|breach|privacy|risk/.test(text)) themes.push('security / compliance');
+  if(/growth|expand|expansion|new market|launch/.test(text)) themes.push('growth / expansion');
+  if(/guidance|earnings|revenue|margin|profit/.test(text)) themes.push('financial pressure');
+  if(/hiring|appoint|named|leadership/.test(text)) themes.push('leadership change');
+  if(!themes.length) themes.push('account relevance');
+  return `${personaForTitle(exec.title)}; signals: ${themes.slice(0,2).join(', ')}.`;
+}
+function rankExecs(account){
+  return (account.execs || [])
+    .map(e => ({
+      ...e,
+      score: roleScore(e.title) + (normalize(e.name).includes(normalize(account.account)) ? 2 : 0),
+      persona: personaForTitle(e.title),
+      why: execWhy(e, account)
+    }))
+    .sort((a,b) => b.score - a.score);
+}
+function recentThemes(account){
+  const words = new Map();
+  const src = [...(account.news||[]), ...(account.mentions||[])].map(x => `${x.title} ${x.summary}`).join(' ').toLowerCase();
+  const themeMap = {
+    'ai': ['ai','artificial intelligence','machine learning','automation'],
+    'security': ['security','breach','privacy','compliance','risk'],
+    'growth': ['growth','expansion','launch','new product','platform'],
+    'guidance': ['guidance','earnings','revenue','margin','profit','forecast'],
+    'hiring': ['hiring','appointed','names','named','leadership'],
+    'partnerships': ['partnership','integration','collaboration','channel'],
+    'product': ['product','feature','solution','capabilities','innovation']
+  };
+  for(const [label, terms] of Object.entries(themeMap)){
+    if(terms.some(t => src.includes(t))) words.set(label, (words.get(label)||0)+1);
+  }
+  if(!words.size) ['growth','product','leadership'].forEach(k => words.set(k,1));
+  return [...words.keys()].slice(0,6);
+}
+function buildHashtags(account){
+  const out = [];
+  const names = [account.account, account.finance_name, ...(account.execs||[]).map(e=>e.name)];
+  names.forEach(n => {
+    const slug = slugify(n).replace(/-/g,'');
+    if(slug) out.push(`#${slug}`);
+  });
+  recentThemes(account).forEach(t => out.push(`#${t}`));
+  return [...new Set(out)].slice(0,10);
+}
+function accountScore(account){
+  const execs = rankExecs(account);
+  const themes = recentThemes(account).length;
+  const mentions = (account.mentions || []).length;
+  const news = (account.news || []).length;
+  return Math.min(100, Math.round(48 + execs[0].score/2 + themes*5 + mentions*2 + news*2));
+}
+function recommendedAngle(account){
+  const themes = recentThemes(account);
+  if(themes.includes('security')) return 'Lead with risk reduction, compliance, and trust messaging.';
+  if(themes.includes('guidance')) return 'Lead with performance, efficiency, and pipeline certainty.';
+  if(themes.includes('ai')) return 'Lead with AI enablement, automation, and operational leverage.';
+  if(themes.includes('growth')) return 'Lead with scale, expansion, and faster execution.';
+  return 'Lead with business outcomes tied to the current platform and growth motion.';
+}
+function buildCompanySearchPacks(account){
+  const company = account.account;
+  const finance = account.finance_name || company;
+  const execs = rankExecs(account).slice(0,3).map(e => e.name);
+  const themes = recentThemes(account);
+  const hashtags = buildHashtags(account);
+  const base = normalize(company);
+  const packs = [];
+  const pushPack = (source, label, query, why, kind) => packs.push({source,label,query,why,kind,url: source==='YouTube' ? youtubeSearchUrl(query) : source==='Spotify' ? spotifySearchUrl(query) : googleSearchUrl(query)});
+  pushPack('Google', 'Company web sweep', `"${company}" podcast OR interview OR webinar OR keynote`, 'Broad web sweep across public sites and long-form mentions.', 'web');
+  pushPack('Google', 'Executive web sweep', execs.length ? execs.map(n => `"${n}"`).join(' OR ') + ` "${company}"` : `"${company}" leadership`, 'Targets leadership mentions, interviews, and conference appearances.', 'web');
+  pushPack('Google', 'Hashtag sweep', `${hashtags.slice(0,4).join(' OR ')} "${company}"`, 'Looks for social-style mentions using company and theme tags.', 'hashtags');
+  pushPack('YouTube', 'Podcast/video search', `"${company}" podcast interview OR webinar OR earnings`, 'Best source for interviews, earnings clips, and speaking appearances.', 'youtube');
+  pushPack('YouTube', 'Executive video search', `${execs.join(' OR ')} "${company}"`, 'Finds exec appearances, panels, and interview clips.', 'youtube');
+  pushPack('Spotify', 'Spotify pages', `site:open.spotify.com OR site:spotify.com "${company}" podcast`, 'Finds Spotify-indexed shows and episode pages via web indexing.', 'spotify');
+  pushPack('Spotify', 'Spotify + execs', `site:open.spotify.com OR site:spotify.com ${execs.join(' OR ')} "${company}"`, 'Targets audio mentions and guest appearances tied to execs.', 'spotify');
+  pushPack('Google', 'LinkedIn posts', `site:linkedin.com/posts OR site:linkedin.com/feed "${company}" ${themes[0] || ''}`.trim(), 'Useful for recent company announcements and executive posts.', 'social');
+  pushPack('Google', 'X / social sweep', `site:x.com OR site:twitter.com "${company}" ${themes[0] || ''} ${hashtags[0] || ''}`.trim(), 'Surfaces social buzz, reposts, and hashtag chatter.', 'social');
+  pushPack('Google', 'Reddit sweep', `site:reddit.com "${company}" OR "${finance}"`, 'Finds organic discussion and product commentary.', 'social');
+  return packs;
+}
+function buildExecSearchPacks(account, exec){
+  const company = account.account;
+  const name = exec.name;
+  return [
+    { source:'Google', label:'Exec web', query:`"${name}" "${company}"`, why:'Finds web mentions and profile pages.', url: googleSearchUrl(`"${name}" "${company}"`) },
+    { source:'Google', label:'Exec news', query:`"${name}" "${company}" news OR interview`, why:'Finds current coverage and interviews.', url: googleSearchUrl(`"${name}" "${company}" news OR interview`) },
+    { source:'YouTube', label:'Exec video', query:`"${name}" "${company}" podcast OR interview`, why:'Finds long-form speaking and podcast clips.', url: youtubeSearchUrl(`"${name}" "${company}" podcast OR interview`) },
+    { source:'LinkedIn', label:'Exec LinkedIn', query:`site:linkedin.com/in "${name}" "${company}"`, why:'Finds LinkedIn profile and related mentions.', url: googleSearchUrl(`site:linkedin.com/in "${name}" "${company}"`) }
+  ];
+}
+function signalChips(account){
+  const out = [];
+  const themes = recentThemes(account);
+  const execs = rankExecs(account).slice(0,3).map(e => e.name);
+  themes.forEach(t => out.push(t));
+  execs.forEach(n => out.push(n));
+  return [...new Set(out)].slice(0,8);
+}
+function searchSummaryText(account, term){
+  const base = term ? `Search term: ${term}.` : `Search term: ${account.account}.`;
+  return `${base} The dashboard builds a ranked web / YouTube / Spotify search pack and opens a deep results drawer with the top prospecting queries.`;
+}
+function renderSidebar(){
+  el.acctCount.textContent = `${accounts.length} accounts`;
+  const filtered = accounts
+    .map((a, idx) => ({a, idx}))
+    .filter(({a}) => {
+      const q = normalize(state.filter);
+      if(!q) return true;
+      return normalize([a.account,a.finance_name,a.industry,a.territory,a.city,a.state].join(' ')).includes(q);
+    });
+  el.accountList.innerHTML = filtered.map(({a,idx}) => {
+    const active = idx === state.selectedIndex ? 'active' : '';
+    return `
+      <div class="acct-card ${active}" data-idx="${idx}">
+        <div class="name">${esc(a.account)}</div>
+        <div class="sub">${esc(a.finance_name || '')}</div>
+        <div class="sub">${esc(a.city || '')}${a.state ? ', ' + esc(a.state) : ''}${a.industry ? ' • ' + esc(a.industry) : ''}</div>
+      </div>
+    `;
+  }).join('');
+  el.accountList.querySelectorAll('.acct-card').forEach(card => {
+    card.addEventListener('click', () => {
+      state.selectedIndex = parseInt(card.dataset.idx, 10);
+      state.activeTab = 'executives';
+      persist();
+      render();
+    });
+  });
+}
+function renderHero(account){
+  el.brandTag.textContent = account.territory || 'Selected account';
+  el.selectedName.textContent = account.account || '';
+  el.selectedBrand.textContent = account.finance_name ? `Finance account: ${account.finance_name}` : '';
+  const items = [
+    {label:'Location', value:[account.city, account.state, account.country].filter(Boolean).join(', ')},
+    {label:'Industry', value:account.industry || '—'},
+    {label:'Territory', value:account.territory || '—'},
+    {label:'Signal score', value:`${accountScore(account)}/100`}
+  ];
+  el.summaryGrid.innerHTML = items.map(i => `
+    <div class="meta-card">
+      <div class="label">${esc(i.label)}</div>
+      <div class="value">${esc(i.value || '—')}</div>
+    </div>
+  `).join('');
+  const links = [
+    {label:'Open website', url: account.website_url},
+    {label:'Open LinkedIn', url: account.linkedin_url},
+    {label:'Google company', url: account.google_company || googleSearchUrl(`"${account.account}"`)}
+  ];
+  el.actionLinks.innerHTML = links.map(l => `<a class="pill" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer">${esc(l.label)}</a>`).join('');
+  const score = accountScore(account);
+  el.intelScore.textContent = `Score ${score}`;
+  el.intelNarrative.textContent = `This account is ranked ${score}/100 for prospecting leverage because it has ${rankExecs(account).length} visible execs, ${account.news?.length || 0} recent news items, and ${account.mentions?.length || 0} public mention signals.`;
+  el.salesAngle.textContent = recommendedAngle(account);
+  el.signalList.innerHTML = signalChips(account).map(s => `<span class="signal">${esc(s)}</span>`).join('');
+}
+function renderTabs(){
+  el.tabs.innerHTML = tabs.map(t => `<button class="tabbtn ${state.activeTab===t.id?'active':''}" data-tab="${t.id}">${esc(t.label)}</button>`).join('');
+  el.tabs.querySelectorAll('.tabbtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.activeTab = btn.dataset.tab;
+      persist();
+      renderTabContent();
+      renderTabs();
+    });
+  });
+}
+function renderTabContent(){
+  const account = selectedAccount();
+  const titleMap = {
+    executives: ['Executives', 'Target the right people fast.', 'Who to target first, by role and influence.'],
+    news: ['Recent news', 'Latest announcements and the story behind them.', 'Use these as trigger events and outreach hooks.'],
+    mentions: ['Public mentions', 'Web/social mention trails and where to look next.', 'Cross-channel mention hunting for sales prospecting.'],
+    podcasts: ['Podcasts + web mentions', 'Deep search across Google, YouTube, Spotify-indexed pages, and social hashtags.', 'Click any chip to launch a search pack and see ranked results.']
+  };
+  const t = titleMap[state.activeTab];
+  el.tabContent.innerHTML = `
+    <div>
+      <div class="section-title">${esc(t[0])}</div>
+      <div class="section-sub">${esc(t[1])}</div>
+      <div class="section-sub">${esc(t[2])}</div>
+    </div>
+    ${state.activeTab==='executives' ? renderExecutives(account) : ''}
+    ${state.activeTab==='news' ? renderNews(account) : ''}
+    ${state.activeTab==='mentions' ? renderMentions(account) : ''}
+    ${state.activeTab==='podcasts' ? renderPodcasts(account) : ''}
+  `;
+  bindTabActions(account);
+}
+function renderExecutives(account){
+  const execs = rankExecs(account);
+  return `
+    <div class="toolbar">
+      <div class="left">
+        <button class="chip active" data-exec-filter="all">All executives</button>
+        <button class="chip" data-exec-filter="decision maker">Decision makers</button>
+        <button class="chip" data-exec-filter="budget owner">Budget owners</button>
+        <button class="chip" data-exec-filter="technical buyer">Technical buyers</button>
+      </div>
+      <div class="right small-note">Ranked by role, buying power, and signal fit.</div>
+    </div>
+    <div class="exec-grid" id="execGrid">
+      ${execs.map((e, idx) => `
+        <div class="exec" data-persona="${esc(e.persona.toLowerCase())}">
+          <div class="top">
+            <div>
+              <div class="name">${idx+1}. ${esc(e.name)}</div>
+              <div class="title">${esc(e.title)}</div>
+            </div>
+            <div class="badge">${esc(e.persona)}</div>
+          </div>
+          <div class="why">${esc(e.why)}</div>
+          <div class="mini-row">
+            <span class="mini">Role score ${e.score}</span>
+            <span class="mini">${esc(account.account)}</span>
+          </div>
+          <div class="actions">
+            <button class="action primary" data-open="google-exec" data-name="${esc(e.name)}">Google search</button>
+            <button class="action" data-open="youtube-exec" data-name="${esc(e.name)}">YouTube search</button>
+            <button class="action" data-open="linkedin-exec" data-name="${esc(e.name)}">LinkedIn search</button>
+            <a class="action" href="${esc(safeUrl(e.url || googleSearchUrl(`"${e.name}" "${account.account}"`)))}" target="_blank" rel="noopener noreferrer">Open source</a>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+function renderNews(account){
+  const themes = recentThemes(account);
+  return `
+    <div class="toolbar">
+      <div class="left tagrow">
+        ${themes.map(t => `<span class="tag" data-theme="${esc(t)}">${esc(t)}</span>`).join('')}
+      </div>
+      <div class="right small-note">Use news triggers to time outreach and personalize messaging.</div>
+    </div>
+    <div class="news-grid">
+      ${(account.news || []).map((n, idx) => `
+        <div class="news-card">
+          <div class="top">
+            <div class="title">${esc(n.title)}</div>
+            <div class="date">${esc(formatDate(n.date))}</div>
+          </div>
+          <div class="desc">${esc(n.summary || '')}</div>
+          <div class="mini-row">
+            <span class="mini">${esc(n.source || 'News')}</span>
+            ${signalChips(account).slice(0,3).map(t => `<span class="mini">${esc(t)}</span>`).join('')}
+          </div>
+          <div class="actions">
+            <a class="action primary" href="${esc(safeUrl(n.url))}" target="_blank" rel="noopener noreferrer">Open article</a>
+            <button class="action" data-open="news-search" data-query="${esc(n.title + ' ' + account.account)}">Search more</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+function renderMentions(account){
+  const hashtags = buildHashtags(account);
+  return `
+    <div class="toolbar">
+      <div class="left tagrow">
+        ${hashtags.map(t => `<button class="tag" data-hashtag="${esc(t)}">${esc(t)}</button>`).join('')}
+      </div>
+      <div class="right small-note">Search social chatter, reposts, and long-tail mentions.</div>
+    </div>
+    <div class="mentions-grid">
+      ${(account.mentions || []).map((m, idx) => `
+        <div class="mention-card">
+          <div class="top">
+            <div class="title">${esc(m.title)}</div>
+            <div class="date">${esc(formatDate(m.date))}</div>
+          </div>
+          <div class="desc">${esc(m.summary || '')}</div>
+          <div class="mini-row">
+            <span class="mini">${esc(m.source || 'Mention')}</span>
+            ${recentThemes(account).map(t => `<span class="mini">${esc(t)}</span>`).join('')}
+          </div>
+          <div class="actions">
+            <a class="action primary" href="${esc(safeUrl(m.url))}" target="_blank" rel="noopener noreferrer">Open mention</a>
+            <button class="action" data-open="mention-search" data-query="${esc(m.title + ' ' + account.account)}">Deep search</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+function renderPodcasts(account){
+  const query = state.podcastQuery || account.account;
+  const execs = rankExecs(account).slice(0,4);
+  const hashtags = buildHashtags(account);
+  const themes = recentThemes(account);
+  return `
+    <div class="podcast-controls">
+      <input id="podcastQuery" type="text" placeholder="Search company, executive, hashtag, or theme" value="${esc(query)}" />
+      <input id="googleKey" type="password" placeholder="Google API key (optional)" value="${esc(state.googleKey)}" />
+      <input id="googleCx" type="text" placeholder="Google search engine ID (optional)" value="${esc(state.googleCx)}" />
+    </div>
+
+    <details class="advanced">
+      <summary>Advanced settings</summary>
+      <div class="advanced-body">
+        <div class="podcast-controls" style="margin-top:10px;">
+          <input id="youtubeKey" type="password" placeholder="YouTube API key (optional)" value="${esc(state.youtubeKey)}" />
+          <button class="btn primary" id="runPodcastSearch" type="button">Run deep search</button>
+          <button class="btn ghost" id="savePodcastKeys" type="button">Save settings</button>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" id="useWeb" ${state.sourceFilters.web ? 'checked' : ''}> Web / Google</label>
+          <label class="toggle"><input type="checkbox" id="useYouTube" ${state.sourceFilters.youtube ? 'checked' : ''}> YouTube</label>
+          <label class="toggle"><input type="checkbox" id="useSpotify" ${state.sourceFilters.spotify ? 'checked' : ''}> Spotify pages</label>
+          <label class="toggle"><input type="checkbox" id="useHashtags" ${state.sourceFilters.hashtags ? 'checked' : ''}> Hashtags / social</label>
+          <label class="toggle"><input type="checkbox" id="useLinkedIn" ${state.sourceFilters.linkedin ? 'checked' : ''}> LinkedIn</label>
+          <label class="toggle"><input type="checkbox" id="useX" ${state.sourceFilters.x ? 'checked' : ''}> X / Twitter</label>
+          <label class="toggle"><input type="checkbox" id="useReddit" ${state.sourceFilters.reddit ? 'checked' : ''}> Reddit</label>
+        </div>
+      </div>
+    </details>
+
+    <div class="strategy-grid">
+      <div class="strategy-box">
+        <div class="label">Priority executives</div>
+        <div class="strategy-chips">
+          ${execs.map(e => `<button type="button" class="match-chip" data-chip-type="exec" data-chip-value="${esc(e.name)}" title="${esc(e.title)}">${esc(e.name)}</button>`).join('')}
+        </div>
+        <div class="meta">Click an executive to launch a focused deep search and surface the best public mentions around that person.</div>
+      </div>
+      <div class="strategy-box">
+        <div class="label">Hashtag cues</div>
+        <div class="strategy-chips">
+          ${hashtags.slice(0,8).map(tag => `<button type="button" class="match-chip" data-chip-type="hashtag" data-chip-value="${esc(tag)}">${esc(tag)}</button>`).join('')}
+        </div>
+        <div class="meta">Turns company, exec, and theme tags into broad web searches that still keep the prospecting intent tight.</div>
+      </div>
+      <div class="strategy-box">
+        <div class="label">Trigger terms</div>
+        <div class="strategy-chips">
+          ${themes.map(t => `<button type="button" class="match-chip" data-chip-type="trigger" data-chip-value="${esc(t)}">${esc(t)}</button>`).join('')}
+        </div>
+        <div class="meta">Recent-news and public-mention signals that often indicate urgency, change, or buying motion.</div>
+      </div>
+    </div>
+
+    <div class="recipe-row" id="recipeRow">
+      ${buildCompanySearchPacks(account).slice(0,10).map(p => `<button type="button" class="recipe-chip" data-query="${esc(p.query)}" data-label="${esc(p.label)}" data-source="${esc(p.source)}">${esc(p.label)}</button>`).join('')}
+    </div>
+
+    <div class="results">
+      <div class="results-head">
+        <div>
+          <div class="label">Deep search window</div>
+          <div class="section-sub">Click any yellow chip, executive, or recipe. The dashboard will open a live-looking results drawer with the ranked search pack, so you always see a visible response even without API keys.</div>
+        </div>
+        <div class="row">
+          <button class="btn ghost" id="copySearchPackBtn" type="button">Copy search pack</button>
+          <button class="btn primary" id="openSearchDrawerBtn" type="button">Open results window</button>
+        </div>
+      </div>
+      <div class="small-note">Search term: <strong>${esc(query)}</strong></div>
+      <div class="query-note">${esc(searchSummaryText(account, query))}</div>
+      <div class="mini-row" style="margin-top:12px">
+        ${signalChips(account).map(s => `<span class="mini">${esc(s)}</span>`).join('')}
+      </div>
+      <div style="margin-top:14px" class="empty">The detailed result window opens on the right side of the screen after you run a search or click a chip.</div>
+    </div>
+  `;
+}
+function bindTabActions(account){
+  // Executive filters
+  el.tabContent.querySelectorAll('[data-exec-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      el.tabContent.querySelectorAll('[data-exec-filter]').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.execFilter;
+      el.tabContent.querySelectorAll('.exec').forEach(card => {
+        const persona = card.dataset.persona || '';
+        const show = filter === 'all' || persona.includes(filter);
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+
+  el.tabContent.querySelectorAll('[data-hashtag]').forEach(btn => {
+    btn.addEventListener('click', () => runDeepSearch(btn.dataset.hashtag || btn.textContent, 'hashtag'));
+  });
+  el.tabContent.querySelectorAll('[data-theme]').forEach(btn => {
+    btn.addEventListener('click', () => runDeepSearch(btn.dataset.theme || btn.textContent, 'theme'));
+  });
+  el.tabContent.querySelectorAll('[data-open]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const query = btn.dataset.query || btn.dataset.name || account.account;
+      runDeepSearch(query, btn.dataset.open || 'search');
+    });
+  });
+
+  if(state.activeTab === 'podcasts'){
+    const q = el.tabContent.querySelector('#podcastQuery');
+    const gk = el.tabContent.querySelector('#googleKey');
+    const gcx = el.tabContent.querySelector('#googleCx');
+    const yk = el.tabContent.querySelector('#youtubeKey');
+    const run = el.tabContent.querySelector('#runPodcastSearch');
+    const save = el.tabContent.querySelector('#savePodcastKeys');
+    const copyPack = el.tabContent.querySelector('#copySearchPackBtn');
+    const openDraw = el.tabContent.querySelector('#openSearchDrawerBtn');
+
+    if(q) q.addEventListener('input', () => { state.podcastQuery = q.value; persist(); });
+    if(gk) gk.addEventListener('input', () => { state.googleKey = gk.value; persist(); });
+    if(gcx) gcx.addEventListener('input', () => { state.googleCx = gcx.value; persist(); });
+    if(yk) yk.addEventListener('input', () => { state.youtubeKey = yk.value; persist(); });
+
+    const syncToggles = () => {
+      state.sourceFilters.web = !!el.tabContent.querySelector('#useWeb')?.checked;
+      state.sourceFilters.youtube = !!el.tabContent.querySelector('#useYouTube')?.checked;
+      state.sourceFilters.spotify = !!el.tabContent.querySelector('#useSpotify')?.checked;
+      state.sourceFilters.hashtags = !!el.tabContent.querySelector('#useHashtags')?.checked;
+      state.sourceFilters.linkedin = !!el.tabContent.querySelector('#useLinkedIn')?.checked;
+      state.sourceFilters.x = !!el.tabContent.querySelector('#useX')?.checked;
+      state.sourceFilters.reddit = !!el.tabContent.querySelector('#useReddit')?.checked;
+      persist();
+    };
+    ['useWeb','useYouTube','useSpotify','useHashtags','useLinkedIn','useX','useReddit'].forEach(id => {
+      const checkbox = el.tabContent.querySelector('#'+id);
+      if(checkbox) checkbox.addEventListener('change', syncToggles);
+    });
+    if(run) run.addEventListener('click', () => runDeepSearch(q ? q.value : account.account, 'manual'));
+    if(save) save.addEventListener('click', () => {
+      state.googleKey = gk ? gk.value.trim() : '';
+      state.googleCx = gcx ? gcx.value.trim() : '';
+      state.youtubeKey = yk ? yk.value.trim() : '';
+      persist();
+      openDrawer('Saved settings', 'Your API settings are stored locally in your browser.', buildDrawerContentFromPacks(buildCompanySearchPacks(account), q ? q.value : account.account));
+    });
+    if(copyPack) copyPack.addEventListener('click', () => {
+      const text = buildSearchPackText(account, q ? q.value : account.account);
+      copyText(text).then(ok => {
+        if(ok) {
+          copyPack.textContent = 'Copied!';
+          setTimeout(() => copyPack.textContent = 'Copy search pack', 1200);
+        }
+      });
+    });
+    if(openDraw) openDraw.addEventListener('click', () => runDeepSearch(q ? q.value : account.account, 'manual'));
+  }
+
+  el.tabContent.querySelectorAll('[data-open="google-exec"]').forEach(btn => {
+    btn.addEventListener('click', () => runDeepSearch(btn.dataset.name, 'exec'));
+  });
+  el.tabContent.querySelectorAll('[data-open="youtube-exec"]').forEach(btn => {
+    btn.addEventListener('click', () => runDeepSearch(btn.dataset.name, 'exec'));
+  });
+  el.tabContent.querySelectorAll('[data-open="linkedin-exec"]').forEach(btn => {
+    btn.addEventListener('click', () => runDeepSearch(btn.dataset.name, 'exec'));
+  });
+}
+function buildSearchPackText(account, term){
+  const packs = buildCompanySearchPacks(account).map(p => `${p.source} | ${p.label} | ${p.query} | ${p.why}`);
+  return [`Account: ${account.account}`, `Focus term: ${term || account.account}`, ...packs].join('\n');
+}
+function drawerTable(packs){
+  const rows = packs.map((p, idx) => `
+    <tr>
+      <td>${idx+1}</td>
+      <td><strong>${esc(p.label)}</strong><br><span class="small-note">${esc(p.source)}</span></td>
+      <td>${esc(p.query)}</td>
+      <td>${esc(p.why)}</td>
+      <td><a class="action primary" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">Open</a></td>
+    </tr>
+  `).join('');
+  return `
+    <div class="drawer-card">
+      <div class="results-head">
+        <div>
+          <div class="label">Search pack</div>
+          <div class="small-note">Ranked by prospecting usefulness and channel fit. These always render, even without API keys.</div>
+        </div>
+        <div class="score">${packs.length} searches</div>
+      </div>
+      <div class="results-table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Type</th><th>Query</th><th>Why it matters</th><th>Open</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function drawerExecCards(account, focusName){
+  const exec = rankExecs(account).find(e => e.name === focusName) || rankExecs(account)[0];
+  if(!exec) return '';
+  const packs = buildExecSearchPacks(account, exec);
+  return `
+    <div class="drawer-card">
+      <div class="results-head">
+        <div>
+          <div class="label">Executive focus</div>
+          <div class="section-sub">${esc(exec.name)} • ${esc(exec.title)}</div>
+        </div>
+        <div class="score">${exec.persona}</div>
+      </div>
+      <div class="tagrow" style="margin-bottom:10px;">
+        ${signalChips(account).slice(0,6).map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+      </div>
+      ${drawerTable(packs)}
+    </div>
+  `;
+}
+function buildDrawerContentFromPacks(packs, term){
+  return `
+    <div class="drawer-grid">
+      <div class="drawer-card">
+        <div class="label" style="color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-size:12px">Search focus</div>
+        <div class="big" style="font-size:22px;margin-top:6px">${esc(term)}</div>
+        <div class="small-note" style="margin-top:8px">${esc(searchSummaryText(selectedAccount(), term))}</div>
+      </div>
+      ${drawerTable(packs)}
+    </div>
+  `;
+}
+function openDrawer(title, subtitle, content){
+  el.drawerTitle.textContent = title;
+  el.drawerSubtitle.textContent = subtitle;
+  el.drawerContent.innerHTML = content;
+  el.drawer.classList.add('open');
+  el.drawerBackdrop.classList.add('open');
+}
+function closeDrawer(){
+  el.drawer.classList.remove('open');
+  el.drawerBackdrop.classList.remove('open');
+}
+function runDeepSearch(term, kind){
+  const account = selectedAccount();
+  state.podcastQuery = clean(term || account.account);
+  persist();
+
+  const packs = buildCompanySearchPacks(account);
+  const q = state.podcastQuery || account.account;
+  const qNorm = normalize(q);
+  let filtered = packs.filter(p => {
+    if(kind === 'exec' && p.label.toLowerCase().includes('exec')) return true;
+    if(kind === 'hashtag' && p.kind === 'hashtags') return true;
+    if(kind === 'theme') return p.kind === 'social' || p.kind === 'web';
+    return true;
+  });
+
+  // add focused query variants on top
+  const focusPacks = [
+    { source:'Google', label:'Focused web', query:`"${q}" "${account.account}" podcast OR interview OR webinar`, why:'Broad web + long-form discovery.', url: googleSearchUrl(`"${q}" "${account.account}" podcast OR interview OR webinar`) },
+    { source:'YouTube', label:'Focused video', query:`"${q}" ${account.account} podcast OR interview`, why:'YouTube videos, clips, and interviews.', url: youtubeSearchUrl(`"${q}" ${account.account} podcast OR interview`) },
+    { source:'Spotify', label:'Focused Spotify', query:`site:open.spotify.com OR site:spotify.com "${q}" "${account.account}"`, why:'Spotify-indexed show and episode pages.', url: spotifySearchUrl(`${q} ${account.account}`) },
+    { source:'Google', label:'Hashtag sweep', query:`#${slugify(q).replace(/-/g,'')} "${account.account}"`, why:'Hashtag-style search for social mentions.', url: googleSearchUrl(`#${slugify(q).replace(/-/g,'')} "${account.account}"`) }
+  ];
+  const combined = [...focusPacks, ...filtered].slice(0, 12);
+
+  let subtitle = `Showing ${combined.length} ranked search paths for ${q}.`;
+  let title = 'Deep search window';
+  if(kind === 'exec') title = 'Executive deep search';
+  if(kind === 'hashtag') title = 'Hashtag deep search';
+  if(kind === 'theme') title = 'Signal deep search';
+
+  const content = `
+    <div class="drawer-grid">
+      <div class="drawer-card">
+        <div class="results-head">
+          <div>
+            <div class="label">Search focus</div>
+            <div class="big" style="font-size:22px;margin-top:6px">${esc(q)}</div>
+          </div>
+          <div class="score">${account.account}</div>
+        </div>
+        <div class="small-note">${esc(searchSummaryText(account, q))}</div>
+        <div class="tagrow" style="margin-top:10px;">
+          ${signalChips(account).map(s => `<span class="tag">${esc(s)}</span>`).join('')}
+        </div>
+      </div>
+      ${drawerTable(combined)}
+      ${kind === 'exec' ? drawerExecCards(account, q) : ''}
+    </div>
+  `;
+  openDrawer(title, subtitle, content);
+}
+function render(){
+  renderSidebar();
+  renderHero(selectedAccount());
+  renderTabs();
+  renderTabContent();
+}
+function bindGlobal(){
+  el.accountFilter.addEventListener('input', () => {
+    state.filter = el.accountFilter.value;
+    renderSidebar();
+  });
+  el.copyShareBtn.addEventListener('click', () => {
+    const url = location.href.split('#')[0] + hashState();
+    copyText(url).then(ok => {
+      el.copyShareBtn.textContent = ok ? 'Link copied' : 'Copy failed';
+      setTimeout(() => el.copyShareBtn.textContent = 'Copy share link', 1200);
+    });
+  });
+  el.copyBriefBtn.addEventListener('click', () => {
+    const account = selectedAccount();
+    const brief = [
+      `Account: ${account.account}`,
+      `Finance alias: ${account.finance_name || '—'}`,
+      `Industry: ${account.industry || '—'}`,
+      `Top execs: ${rankExecs(account).slice(0,3).map(e => `${e.name} (${e.title})`).join(' | ')}`,
+      `Angle: ${recommendedAngle(account)}`,
+      `Themes: ${recentThemes(account).join(', ')}`,
+      `Hashtags: ${buildHashtags(account).join(' ')}`
+    ].join('\n');
+    copyText(brief).then(ok => {
+      el.copyBriefBtn.textContent = ok ? 'Brief copied' : 'Copy failed';
+      setTimeout(() => el.copyBriefBtn.textContent = 'Copy prospecting brief', 1200);
+    });
+  });
+  el.exportJsonBtn.addEventListener('click', () => {
+    const account = selectedAccount();
+    const payload = {
+      account,
+      score: accountScore(account),
+      angle: recommendedAngle(account),
+      themes: recentThemes(account),
+      hashtags: buildHashtags(account),
+      execs: rankExecs(account).slice(0,5),
+      searchPack: buildCompanySearchPacks(account).slice(0,10)
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${slugify(account.account) || 'account'}-snapshot.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  });
+  el.drawerClose.addEventListener('click', closeDrawer);
+  el.drawerBackdrop.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDrawer(); });
+  window.addEventListener('hashchange', () => {
+    applyHash();
+    render();
+  });
+}
+restore();
+bindGlobal();
+render();
+</script>
+</body>
+</html>
